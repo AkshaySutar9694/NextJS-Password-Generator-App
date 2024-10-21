@@ -1,101 +1,184 @@
-import Image from "next/image";
+"use client";
+import React from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+
+const checkBoxItems = [
+  {
+    id: "upperCaseLettersRequired",
+    label: "Have uppercase letters in password",
+  },
+  {
+    id: "lowerCaseLettersRequired",
+    label: "Have lowercase letters in password",
+  },
+  {
+    id: "numbersRequired",
+    label: "Have numbers in password",
+  },
+  {
+    id: "symbolsRequired",
+    label: "Have symbols/speacial characters in password",
+  },
+];
+
+const uppercaseLetters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+const lowercaseLetters = "abcdefghijklmnopqrstuvwxyz";
+const numericLetters = "0123456789";
+const symobolicLetters = "!@#$%^&*()_+";
+
+const formSchema = z.object({
+  passwordLength: z
+    .string()
+    .min(1, { message: "Password length value is required" }),
+  constraints: z
+    .array(z.string())
+    .refine((value) => value.some((item) => item), {
+      message: "You have to select at least one constraint!",
+    }),
+});
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [passwordGenerted, setPasswordGenerted] = React.useState("");
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      passwordLength: "",
+      constraints: ["upperCaseLettersRequired", "lowerCaseLettersRequired"],
+    },
+  });
+
+  function onSubmit(values: z.infer<typeof formSchema>) {
+    const passwordLength = values.passwordLength;
+    let passwordStringValue = "";
+    let createdPassword = "";
+    values.constraints.forEach((element) => {
+      if (element === "upperCaseLettersRequired") {
+        passwordStringValue = passwordStringValue + uppercaseLetters;
+      }
+      if (element === "lowerCaseLettersRequired") {
+        passwordStringValue = passwordStringValue + lowercaseLetters;
+      }
+      if (element === "numbersRequired") {
+        passwordStringValue = passwordStringValue + numericLetters;
+      }
+      if (element === "symbolsRequired") {
+        passwordStringValue = passwordStringValue + symobolicLetters;
+      }
+    });
+    for (let index = 0; index < Number(passwordLength); index++) {
+      const randomIndex = Math.floor(
+        Math.random() * passwordStringValue.length
+      );
+      createdPassword = createdPassword + passwordStringValue[randomIndex];
+    }
+    setPasswordGenerted(createdPassword);
+  }
+
+  return (
+    <div className="flex flex-col p-6 min-h-screen items-center justify-center">
+      <Card className="max-w-sm shadow-lg">
+        <CardHeader className="text-center">
+          <CardTitle>Password Generator</CardTitle>
+          <CardDescription>
+            Generate rondom passaords based on your priority!
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+              <FormField
+                control={form.control}
+                name="passwordLength"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Enter legth of password</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Enter length of password"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="constraints"
+                render={({ field }) => (
+                  <FormItem>
+                    {checkBoxItems.map((item) => (
+                      <FormField
+                        key={item.id}
+                        control={form.control}
+                        name="constraints"
+                        render={({ field }) => {
+                          return (
+                            <FormItem
+                              key={item.id}
+                              className="flex flex-row items-start space-x-3 space-y-0"
+                            >
+                              <FormControl>
+                                <Checkbox
+                                  checked={field.value?.includes(item.id)}
+                                  onCheckedChange={(checked) => {
+                                    return checked
+                                      ? field.onChange([
+                                          ...field.value,
+                                          item.id,
+                                        ])
+                                      : field.onChange(
+                                          field.value?.filter(
+                                            (value) => value !== item.id
+                                          )
+                                        );
+                                  }}
+                                />
+                              </FormControl>
+                              <FormLabel className="text-sm font-normal">
+                                {item.label}
+                              </FormLabel>
+                            </FormItem>
+                          );
+                        }}
+                      />
+                    ))}
+                  </FormItem>
+                )}
+              />
+              <Button type="submit">Submit</Button>
+            </form>
+          </Form>
+        </CardContent>
+        <CardFooter className="flex flex-col ">
+          <div className="text-sm">Generated password</div>
+          <div className="text-lg font-semibold">{passwordGenerted}</div>
+        </CardFooter>
+      </Card>
     </div>
   );
 }
